@@ -4,6 +4,83 @@
   
     
     <entry>
+      <title>Golang深度剖析</title>
+      <link href="/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/Golang/202408Golang%E6%B7%B1%E5%BA%A6%E5%89%96%E6%9E%90/"/>
+      <url>/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/Golang/202408Golang%E6%B7%B1%E5%BA%A6%E5%89%96%E6%9E%90/</url>
+      
+        <content type="html"><![CDATA[<h1 id="字符串存储与表示"><a href="#字符串存储与表示" class="headerlink" title="字符串存储与表示"></a>字符串存储与表示</h1><p><a href="https://cloud.tencent.com/developer/article/2029043">【Golang】深究字符串——从byte rune string到Unicode与UTF-8</a></p><h2 id="UNICODE"><a href="#UNICODE" class="headerlink" title="UNICODE"></a>UNICODE</h2><ol><li><p>ASCII码<br>通过数字电路的知识，我们知道使用二进制对信息进行编码与度量。最初现代计算机由美国人发明使用，自然而然就考虑把英语进行编码，所以<strong>ASCII码就是英语字符对应的二进制位</strong>，而且一直沿用至今，ASCII码占用1个字节，最高位统一规定为0，所以只使用了7位，一共可以表示27&#x3D;128个字符，包括32个不能打印的字符。</p></li><li><p>Unicode<br>现代计算机早已不是美国一家独大，互联网更是让世界互联互通。但是文字确实多种多样，各个国家拥有一套编码规则，同一个二进制数会被不同编码解释为不同符号。如果每次不把编码方式勾兑清楚，谁也不知道该怎么解码。有没有不需要勾兑的方式？有，就是<strong>抛开各个国家独有的编码方式，统一使用一个编码方式：Unicode</strong></p></li></ol><h2 id="UTF-8"><a href="#UTF-8" class="headerlink" title="UTF-8"></a>UTF-8</h2><ol start="3"><li>UTF-8<br><strong>Unicode规定了字符的二进制代码，但是却没有规定如何存储</strong>。而且，各个字符占的字节是可能不同的，比如汉字很多都有10几位二进制，可能需要2个字节，3个字节，甚至4个字节。虽有unicode对应，肯定是该多少字节就存多少字节，而不是每个字符都存相同大小字节，毕竟unicode有100多万，全存相同大小字节，肯定浪费空间。但是就有了最终要解决的问题：什么时候该读3个字节以表示1个字符，什么时候该读1个字节以表示字符？</li></ol><p><strong>UTF-8就是存储Unicode的方式</strong>，但不是唯一的，其他还有utf-16,utf-32</p><p>什么时候读1个字节的字符？<br>字节的第一位为0，后面7位为符号的unicode码。所以这样看，英语字母的utf-8和ascii一致。</p><p>什么时候读多个字节的字符？<br>对于有n个字节的字符，（n&gt;1）….其中第一个字节的高n位就为1，换句话说：</p><ol><li>第一个字节读到0，那就是读1个字节  </li><li>第一个字节读到n个1，就要读n个字节  </li><li>然后第一个字高n位后1位设为0，后续其他字节前两位都设为10</li></ol><figure class="highlight golang"><table><tr><td class="code"><pre><span class="line"><span class="number">0</span>xxxxxxx # 读<span class="number">1</span>个字节</span><br><span class="line"><span class="number">110</span>xxxxx <span class="number">10</span>xxxxxx # 读两个字节</span><br><span class="line"><span class="number">1110</span>xxxx <span class="number">10</span>xxxxxx <span class="number">10</span>xxxxxx #读<span class="number">3</span>个字节</span><br><span class="line"><span class="number">11110</span>xxx <span class="number">10</span>xxxxxx <span class="number">10</span>xxxxxx <span class="number">10</span>xxxxxx #读<span class="number">4</span>个字节</span><br><span class="line"></span><br><span class="line">Unicode符号范围     |        UTF<span class="number">-8</span>编码方式</span><br><span class="line">(十六进制)        |              （二进制）</span><br><span class="line">----------------------+---------------------------------------------</span><br><span class="line"><span class="number">0000</span> <span class="number">0000</span><span class="number">-0000</span> <span class="number">007</span>F | <span class="number">0</span>xxxxxxx</span><br><span class="line"><span class="number">0000</span> <span class="number">0080</span><span class="number">-0000</span> <span class="number">07</span>FF | <span class="number">110</span>xxxxx <span class="number">10</span>xxxxxx</span><br><span class="line"><span class="number">0000</span> <span class="number">0800</span><span class="number">-0000</span> FFFF | <span class="number">1110</span>xxxx <span class="number">10</span>xxxxxx <span class="number">10</span>xxxxxx</span><br><span class="line"><span class="number">0001</span> <span class="number">0000</span><span class="number">-0010</span> FFFF | <span class="number">11110</span>xxx <span class="number">10</span>xxxxxx <span class="number">10</span>xxxxxx <span class="number">10</span>xxxxxx</span><br></pre></td></tr></table></figure><h2 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h2><p>字符串是Go 语言中最常用的基础数据类型之一，实际上字符串是一块连续的内存空间，一个由字符组成的数组，既然作为数组来说，它会占用一片连续的内存空间，这片连续的内存空间就存储了多个字节，整个字节数组组成了字符串</p><p>Go语言使用UTF-8编码，为此，Go在代码中引入了一个新术语，称为 rune。rune是int32的类型别名；byte其实是uint8的别名</p><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote><ol><li>unicode是一种编码方式，任意字符可以使用一个unicode单位表示，即int32，即rune</li><li>字符串由byte数组组成，即utf-8编码存储的unicode</li></ol><p>所以字符串比如“golang字符串”，对应[]rune的size是6+3，对应[]byte的size是6+9</p></blockquote>]]></content>
+      
+      
+      <categories>
+          
+          <category> 技术与工具 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 编程语言 </tag>
+            
+            <tag> Golang </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>业务系统设计参考</title>
+      <link href="/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E4%B8%9A%E5%8A%A1%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/202203%E4%B8%9A%E5%8A%A1%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/"/>
+      <url>/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E4%B8%9A%E5%8A%A1%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/202203%E4%B8%9A%E5%8A%A1%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/</url>
+      
+        <content type="html"><![CDATA[<h1 id="开篇"><a href="#开篇" class="headerlink" title="开篇"></a>开篇</h1>]]></content>
+      
+      
+      <categories>
+          
+          <category> 技术与工具 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 业务系统设计 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>大数据学习</title>
+      <link href="/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%95%B0%E6%8D%AE/201805%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%AD%A6%E4%B9%A0/"/>
+      <url>/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%95%B0%E6%8D%AE/201805%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%AD%A6%E4%B9%A0/</url>
+      
+        <content type="html"><![CDATA[<h1 id="相关技术栈"><a href="#相关技术栈" class="headerlink" title="相关技术栈"></a>相关技术栈</h1><h2 id="mysql"><a href="#mysql" class="headerlink" title="mysql"></a>mysql</h2><h2 id="java开发套件"><a href="#java开发套件" class="headerlink" title="java开发套件"></a>java开发套件</h2><h2 id="hadoop"><a href="#hadoop" class="headerlink" title="hadoop"></a>hadoop</h2><h2 id="hive"><a href="#hive" class="headerlink" title="hive"></a>hive</h2><h2 id="hbase"><a href="#hbase" class="headerlink" title="hbase"></a>hbase</h2><h2 id="oozie"><a href="#oozie" class="headerlink" title="oozie"></a>oozie</h2><h2 id="flume"><a href="#flume" class="headerlink" title="flume"></a>flume</h2><h2 id="python"><a href="#python" class="headerlink" title="python"></a>python</h2><h2 id="kakfa"><a href="#kakfa" class="headerlink" title="kakfa"></a>kakfa</h2><h2 id="scala"><a href="#scala" class="headerlink" title="scala"></a>scala</h2><h2 id="spark"><a href="#spark" class="headerlink" title="spark"></a>spark</h2><h2 id="flink"><a href="#flink" class="headerlink" title="flink"></a>flink</h2><h2 id="elk"><a href="#elk" class="headerlink" title="elk"></a>elk</h2><h1 id="跟进记录归档"><a href="#跟进记录归档" class="headerlink" title="跟进记录归档"></a>跟进记录归档</h1><p><a href="https://www.zhihu.com/question/21380122/answer/301323291">我是学Java的，想尝试大数据和数据挖掘，该怎么规划学习？</a></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 技术与工具 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 大数据 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>iphone使用配置和心得</title>
       <link href="/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/iphone%E6%89%8B%E6%9C%BA%E9%85%8D%E7%BD%AE/"/>
       <url>/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%B7%A5%E4%BD%9C%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/iphone%E6%89%8B%E6%9C%BA%E9%85%8D%E7%BD%AE/</url>
@@ -154,6 +231,56 @@
     
     
     <entry>
+      <title>交互式提示工程入门</title>
+      <link href="/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%A4%9A%E6%A8%A1%E6%80%81/202408%E4%BA%A4%E4%BA%92%E5%BC%8F%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B%E5%85%A5%E9%97%A8/"/>
+      <url>/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%A4%9A%E6%A8%A1%E6%80%81/202408%E4%BA%A4%E4%BA%92%E5%BC%8F%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B%E5%85%A5%E9%97%A8/</url>
+      
+        <content type="html"><![CDATA[<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>使用chatgpt-4omini做测试 <a href="https://chatgpt.com/">https://chatgpt.com/</a></p><h1 id="跟进记录归档"><a href="#跟进记录归档" class="headerlink" title="跟进记录归档"></a>跟进记录归档</h1><p>2024-08-26 11:07:47 最初来自眼镜交互场景。应邹伟要求，沉淀一波，搞个口语交互场景下的prompt经验分享</p><p>2024-08-26 11:08:28 参考资料</p><ol><li>Anthropic：从入门到精通交互式提示工程教程 <a href="https://github.com/anthropics/prompt-eng-interactive-tutorial">https://github.com/anthropics/prompt-eng-interactive-tutorial</a></li><li><a href="https://docs.anthropic.com/en/release-notes/system-prompts">https://docs.anthropic.com/en/release-notes/system-prompts</a></li><li>尚尔昕的分享资料</li><li>其他资料。搜索 Prompt engineering</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> 技术与工具 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 大模型 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>深度学习部署入门</title>
+      <link href="/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%A4%9A%E6%A8%A1%E6%80%81/202408%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E9%83%A8%E7%BD%B2%E5%85%A5%E9%97%A8/"/>
+      <url>/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%A4%9A%E6%A8%A1%E6%80%81/202408%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E9%83%A8%E7%BD%B2%E5%85%A5%E9%97%A8/</url>
+      
+        <content type="html"><![CDATA[<h1 id="推理部署综述"><a href="#推理部署综述" class="headerlink" title="推理部署综述"></a>推理部署综述</h1><p>模型部署的步骤：</p><ol><li>训练一个深度学习模型；</li><li>使用不同的推理框架对模型进行推理转换；</li><li>在应用平台运行转换好的模型。</li></ol><p><strong>实际应用场景往往需要模型速度与精度能达到一个较好的平衡。因此这就需要在算法（剪枝，压缩等）与底层（手写加速算作）去优化模型。</strong></p><h1 id="模型格式介绍"><a href="#模型格式介绍" class="headerlink" title="模型格式介绍"></a>模型格式介绍</h1><ol><li>PyTorch (.pth&#x2F;.pt): 这种格式是PyTorch的原生格式，主要用于保存和加载PyTorch模型。</li><li>ONNX (Open Neural Network Exchange): 这是一个开放的模型表示格式，允许在不同的深度学习框架之间交换模型，如PyTorch、TensorFlow、Caffe2等。</li><li>TensorRT (TRT): TensorRT是一个深度学习模型优化器和运行时，主要用于加速模型的推理。TRT格式是为NVIDIA GPU优化的，并且经过了量化、层融合和其他优化。<strong>使用TensorRT优化的模型通常在NVIDIA GPU上有更快的推理速度。这是因为TensorRT会进行很多针对性能的优化。</strong></li></ol><p>通常，你可能首先从PyTorch转换为ONNX，然后从ONNX转换为TensorRT格式，尽管也有直接从PyTorch到TensorRT的工具和方法。</p><h2 id="兼容性"><a href="#兼容性" class="headerlink" title="兼容性"></a>兼容性</h2><ol><li>PyTorch: 由于它是PyTorch的原生格式，所以它与PyTorch高度兼容。</li><li>ONNX: 设计为跨框架的，但<strong>并不是所有的模型和操作都能轻松地转换为ONNX或从ONNX转换</strong>。</li><li>TensorRT: 主要为NVIDIA GPU优化，对于使用不支持的层或操作的模型，可能需要额外的工作来进行转换。</li></ol><h2 id="ONNX"><a href="#ONNX" class="headerlink" title="ONNX"></a>ONNX</h2><p>开放神经网络交换ONNX（Open Neural Network Exchange）是一套表示深度神经网络模型的开放格式，由微软和Facebook于2017推出，然后迅速得到了各大厂商和框架的支持。通过短短几年的发展，<strong>已经成为表示深度学习模型的实际标准，并且通过ONNX-ML，可以支持传统非神经网络机器学习模型，大有一统整个AI模型交换标准</strong>。ONNX定义了一组与环境和平台无关的标准格式，为AI模型的互操作性提供了基础，使AI模型可以在不同框架和环境下交互使用。硬件和软件厂商可以基于ONNX标准优化模型性能，让所有兼容ONNX标准的框架受益，简单来说，ONNX就是模型转换的中间人。</p><h2 id="TensorRT"><a href="#TensorRT" class="headerlink" title="TensorRT"></a>TensorRT</h2><p>NVIDIA TensorRT™ 是用于高性能深度学习推理的 SDK。此 SDK 包含深度学习推理优化器和运行时环境，可为深度学习推理应用提供低延迟和高吞吐量。</p><p>在推理过程中，<strong>基于 TensorRT 的应用程序的执行速度可比 CPU 平台的速度快 40 倍</strong>。借助 TensorRT，您可以优化在所有主要框架中训练的神经网络模型，精确校正低精度，并最终将模型部署到超大规模数据中心、嵌入式或汽车产品平台中。<br>TensorRT 针对多种深度学习推理应用的生产部署提供 INT8 和 FP16 优化，例如视频流式传输、语音识别、推荐和自然语言处理。推理精度降低后可显著减少应用延迟，这恰巧满足了许多实时服务、自动和嵌入式应用的要求。</p><p><strong>模型可以通过onnx格式转换成TensorRT格式后，使用 NVIDIA Triton 推理服务器完成部署</strong></p><h1 id="TensorRT-LLM"><a href="#TensorRT-LLM" class="headerlink" title="TensorRT-LLM"></a>TensorRT-LLM</h1><p>TensorRT-LLM是NV发布的一个推理引擎。llm被编译成TensorRT后与triton服务器一起部署并支持多GPU-多节点推理和FP8。</p><h1 id="LMDeploy"><a href="#LMDeploy" class="headerlink" title="LMDeploy"></a>LMDeploy</h1><p>(<a href="https://github.com/InternLM/lmdeploy">https://github.com/InternLM/lmdeploy</a>)</p><p>LMDeploy 是一个 Python 库，<strong>用于压缩、部署和服务大型语言模型 （LLM） 和视觉语言模型 （VLM）</strong>。 其核心推理引擎包括 TurboMind Engine 和 PyTorch Engine。前者由 C++ 和 CUDA 开发，力求最终优化推理性能，而后者则纯粹使用 Python 开发，旨在为开发人员减少门槛。</p><p>它支持在 Linux 和 Windows 平台上部署 LLM 和 VLM，最低要求 CUDA 版本 11.3。</p><p>LMDeploy允许压缩、部署和服务llm，同时提供高效的推理(持久批处理、阻塞KV缓存、动态分裂和融合、张量并行、高性能CUDA内核)、有效的量化(4位推理性能比FP16高2.4倍)。跨多台机器和GPU部署多模型服务。此外，它还允许分析令牌延迟和吞吐量、请求吞吐量、API服务器和triton推理服务器性能。</p><p>可以很简单的支持server部署，提供类似openai的接口</p><h1 id="VLLM"><a href="#VLLM" class="headerlink" title="VLLM"></a>VLLM</h1><p>vLLM提供LLM推理和服务，<strong>具有SOTA吞吐量，分页注意力，连续批处理，量化(GPTQ, AWQ, FP8)的支持和优化的CUDA内核</strong>。</p><p>支持各种生成式 Transformer 模型。 <a href="https://docs.vllm.ai/en/stable/models/supported_models.html">https://docs.vllm.ai/en/stable/models/supported_models.html</a><br>另外还支持transformer模型的自我定制。 <a href="https://docs.vllm.ai/en/stable/models/adding_model.html">https://docs.vllm.ai/en/stable/models/adding_model.html</a></p><p><strong>暂不支持whisper</strong></p><h2 id="怎么用"><a href="#怎么用" class="headerlink" title="怎么用"></a>怎么用</h2><p>从官方文档上可以看出，支持的事常见的大语言模型和多模态大模型，并不支持传统的Torch模型 <a href="https://lmdeploy.readthedocs.io/en/latest/supported_models/supported_models.html">https://lmdeploy.readthedocs.io/en/latest/supported_models/supported_models.html</a></p><h1 id="Chinese-CLIP"><a href="#Chinese-CLIP" class="headerlink" title="Chinese-CLIP"></a>Chinese-CLIP</h1><p>需求的起源是基于Chinese-CLIP训练的模型。产出是Torch类型的模型，所以最差情况下可以直接Torch.run。同时也<strong>支持将各规模的Pytorch模型，转换为ONNX或TensorRT格式</strong> <a href="https://github.com/OFA-Sys/Chinese-CLIP/blob/master/deployment.md">https://github.com/OFA-Sys/Chinese-CLIP/blob/master/deployment.md</a></p><h1 id="跟进记录归档"><a href="#跟进记录归档" class="headerlink" title="跟进记录归档"></a>跟进记录归档</h1><p>2024-08-27 19:39:16 原因是有几个图像模型需要上线。经过调研有三种方式：</p><ol><li>交付冯亮，以离线任务封装。优势是可以尝试利用spark集群的CPU资源，劣势是仅有的GPU来自AIT，不确定归还时间。所以作为长期跑大量数据无固定交付时间的的候选方案</li><li>在方阳aistudio（2.0）平台上自建空间。需要有组内独占的GPU资源，因为xyz的GPU卡都由彭一平管理，所以不可行</li><li>交付一平手动部署，隐藏与aistudio交互的细节。然后自建调度任务</li></ol><p>不管哪种方案，都需要了解模型的推理部署框架，以便与部署层沟通。</p><p>2024-08-27 19:53:09 看起来vllm和lmdeploy都不太支持语音模型和传统的图像模型，比如whisper</p><p>2024-08-27 19:57:06 AI模型部署落地综述（ONNX&#x2F;NCNN&#x2F;TensorRT） <a href="https://www.jianshu.com/p/4e74a7c1a6f1">https://www.jianshu.com/p/4e74a7c1a6f1</a></p><p>2024-08-27 20:18:05 TODO 一篇就够：高性能推理引擎理论与实践 (TensorRT) <a href="https://developer.aliyun.com/article/995926">https://developer.aliyun.com/article/995926</a></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 技术与工具 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 大模型 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>搞定-工作方法与艺术</title>
       <link href="/journaling/%E6%80%8E%E4%B9%88%E8%AF%BB/202407%E6%90%9E%E5%AE%9A-%E5%B7%A5%E4%BD%9C%E6%96%B9%E6%B3%95%E4%B8%8E%E8%89%BA%E6%9C%AF/"/>
       <url>/journaling/%E6%80%8E%E4%B9%88%E8%AF%BB/202407%E6%90%9E%E5%AE%9A-%E5%B7%A5%E4%BD%9C%E6%96%B9%E6%B3%95%E4%B8%8E%E8%89%BA%E6%9C%AF/</url>
@@ -250,56 +377,6 @@
         <tags>
             
             <tag> 书单 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>交互式提示工程入门</title>
-      <link href="/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%A4%9A%E6%A8%A1%E6%80%81/202408%E4%BA%A4%E4%BA%92%E5%BC%8F%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B%E5%85%A5%E9%97%A8/"/>
-      <url>/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%A4%9A%E6%A8%A1%E6%80%81/202408%E4%BA%A4%E4%BA%92%E5%BC%8F%E6%8F%90%E7%A4%BA%E5%B7%A5%E7%A8%8B%E5%85%A5%E9%97%A8/</url>
-      
-        <content type="html"><![CDATA[<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>使用chatgpt-4omini做测试 <a href="https://chatgpt.com/">https://chatgpt.com/</a></p><h1 id="跟进记录归档"><a href="#跟进记录归档" class="headerlink" title="跟进记录归档"></a>跟进记录归档</h1><p>2024-08-26 11:07:47 最初来自眼镜交互场景。应邹伟要求，沉淀一波，搞个口语交互场景下的prompt经验分享</p><p>2024-08-26 11:08:28 参考资料</p><ol><li>Anthropic：从入门到精通交互式提示工程教程 <a href="https://github.com/anthropics/prompt-eng-interactive-tutorial">https://github.com/anthropics/prompt-eng-interactive-tutorial</a></li><li><a href="https://docs.anthropic.com/en/release-notes/system-prompts">https://docs.anthropic.com/en/release-notes/system-prompts</a></li><li>尚尔昕的分享资料</li><li>其他资料。搜索 Prompt engineering</li></ol>]]></content>
-      
-      
-      <categories>
-          
-          <category> 技术与工具 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> 大模型 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>深度学习部署入门</title>
-      <link href="/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%A4%9A%E6%A8%A1%E6%80%81/202408%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E9%83%A8%E7%BD%B2%E5%85%A5%E9%97%A8/"/>
-      <url>/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%A4%9A%E6%A8%A1%E6%80%81/202408%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E9%83%A8%E7%BD%B2%E5%85%A5%E9%97%A8/</url>
-      
-        <content type="html"><![CDATA[<h1 id="推理部署综述"><a href="#推理部署综述" class="headerlink" title="推理部署综述"></a>推理部署综述</h1><p>模型部署的步骤：</p><ol><li>训练一个深度学习模型；</li><li>使用不同的推理框架对模型进行推理转换；</li><li>在应用平台运行转换好的模型。</li></ol><p><strong>实际应用场景往往需要模型速度与精度能达到一个较好的平衡。因此这就需要在算法（剪枝，压缩等）与底层（手写加速算作）去优化模型。</strong></p><h1 id="模型格式介绍"><a href="#模型格式介绍" class="headerlink" title="模型格式介绍"></a>模型格式介绍</h1><ol><li>PyTorch (.pth&#x2F;.pt): 这种格式是PyTorch的原生格式，主要用于保存和加载PyTorch模型。</li><li>ONNX (Open Neural Network Exchange): 这是一个开放的模型表示格式，允许在不同的深度学习框架之间交换模型，如PyTorch、TensorFlow、Caffe2等。</li><li>TensorRT (TRT): TensorRT是一个深度学习模型优化器和运行时，主要用于加速模型的推理。TRT格式是为NVIDIA GPU优化的，并且经过了量化、层融合和其他优化。<strong>使用TensorRT优化的模型通常在NVIDIA GPU上有更快的推理速度。这是因为TensorRT会进行很多针对性能的优化。</strong></li></ol><p>通常，你可能首先从PyTorch转换为ONNX，然后从ONNX转换为TensorRT格式，尽管也有直接从PyTorch到TensorRT的工具和方法。</p><h2 id="兼容性"><a href="#兼容性" class="headerlink" title="兼容性"></a>兼容性</h2><ol><li>PyTorch: 由于它是PyTorch的原生格式，所以它与PyTorch高度兼容。</li><li>ONNX: 设计为跨框架的，但<strong>并不是所有的模型和操作都能轻松地转换为ONNX或从ONNX转换</strong>。</li><li>TensorRT: 主要为NVIDIA GPU优化，对于使用不支持的层或操作的模型，可能需要额外的工作来进行转换。</li></ol><h2 id="ONNX"><a href="#ONNX" class="headerlink" title="ONNX"></a>ONNX</h2><p>开放神经网络交换ONNX（Open Neural Network Exchange）是一套表示深度神经网络模型的开放格式，由微软和Facebook于2017推出，然后迅速得到了各大厂商和框架的支持。通过短短几年的发展，<strong>已经成为表示深度学习模型的实际标准，并且通过ONNX-ML，可以支持传统非神经网络机器学习模型，大有一统整个AI模型交换标准</strong>。ONNX定义了一组与环境和平台无关的标准格式，为AI模型的互操作性提供了基础，使AI模型可以在不同框架和环境下交互使用。硬件和软件厂商可以基于ONNX标准优化模型性能，让所有兼容ONNX标准的框架受益，简单来说，ONNX就是模型转换的中间人。</p><h2 id="TensorRT"><a href="#TensorRT" class="headerlink" title="TensorRT"></a>TensorRT</h2><p>NVIDIA TensorRT™ 是用于高性能深度学习推理的 SDK。此 SDK 包含深度学习推理优化器和运行时环境，可为深度学习推理应用提供低延迟和高吞吐量。</p><p>在推理过程中，<strong>基于 TensorRT 的应用程序的执行速度可比 CPU 平台的速度快 40 倍</strong>。借助 TensorRT，您可以优化在所有主要框架中训练的神经网络模型，精确校正低精度，并最终将模型部署到超大规模数据中心、嵌入式或汽车产品平台中。<br>TensorRT 针对多种深度学习推理应用的生产部署提供 INT8 和 FP16 优化，例如视频流式传输、语音识别、推荐和自然语言处理。推理精度降低后可显著减少应用延迟，这恰巧满足了许多实时服务、自动和嵌入式应用的要求。</p><p><strong>模型可以通过onnx格式转换成TensorRT格式后，使用 NVIDIA Triton 推理服务器完成部署</strong></p><h1 id="TensorRT-LLM"><a href="#TensorRT-LLM" class="headerlink" title="TensorRT-LLM"></a>TensorRT-LLM</h1><p>TensorRT-LLM是NV发布的一个推理引擎。llm被编译成TensorRT后与triton服务器一起部署并支持多GPU-多节点推理和FP8。</p><h1 id="LMDeploy"><a href="#LMDeploy" class="headerlink" title="LMDeploy"></a>LMDeploy</h1><p>(<a href="https://github.com/InternLM/lmdeploy">https://github.com/InternLM/lmdeploy</a>)</p><p>LMDeploy 是一个 Python 库，<strong>用于压缩、部署和服务大型语言模型 （LLM） 和视觉语言模型 （VLM）</strong>。 其核心推理引擎包括 TurboMind Engine 和 PyTorch Engine。前者由 C++ 和 CUDA 开发，力求最终优化推理性能，而后者则纯粹使用 Python 开发，旨在为开发人员减少门槛。</p><p>它支持在 Linux 和 Windows 平台上部署 LLM 和 VLM，最低要求 CUDA 版本 11.3。</p><p>LMDeploy允许压缩、部署和服务llm，同时提供高效的推理(持久批处理、阻塞KV缓存、动态分裂和融合、张量并行、高性能CUDA内核)、有效的量化(4位推理性能比FP16高2.4倍)。跨多台机器和GPU部署多模型服务。此外，它还允许分析令牌延迟和吞吐量、请求吞吐量、API服务器和triton推理服务器性能。</p><p>可以很简单的支持server部署，提供类似openai的接口</p><h1 id="VLLM"><a href="#VLLM" class="headerlink" title="VLLM"></a>VLLM</h1><p>vLLM提供LLM推理和服务，<strong>具有SOTA吞吐量，分页注意力，连续批处理，量化(GPTQ, AWQ, FP8)的支持和优化的CUDA内核</strong>。</p><p>支持各种生成式 Transformer 模型。 <a href="https://docs.vllm.ai/en/stable/models/supported_models.html">https://docs.vllm.ai/en/stable/models/supported_models.html</a><br>另外还支持transformer模型的自我定制。 <a href="https://docs.vllm.ai/en/stable/models/adding_model.html">https://docs.vllm.ai/en/stable/models/adding_model.html</a></p><p><strong>暂不支持whisper</strong></p><h2 id="怎么用"><a href="#怎么用" class="headerlink" title="怎么用"></a>怎么用</h2><p>从官方文档上可以看出，支持的事常见的大语言模型和多模态大模型，并不支持传统的Torch模型 <a href="https://lmdeploy.readthedocs.io/en/latest/supported_models/supported_models.html">https://lmdeploy.readthedocs.io/en/latest/supported_models/supported_models.html</a></p><h1 id="Chinese-CLIP"><a href="#Chinese-CLIP" class="headerlink" title="Chinese-CLIP"></a>Chinese-CLIP</h1><p>需求的起源是基于Chinese-CLIP训练的模型。产出是Torch类型的模型，所以最差情况下可以直接Torch.run。同时也<strong>支持将各规模的Pytorch模型，转换为ONNX或TensorRT格式</strong> <a href="https://github.com/OFA-Sys/Chinese-CLIP/blob/master/deployment.md">https://github.com/OFA-Sys/Chinese-CLIP/blob/master/deployment.md</a></p><h1 id="跟进记录归档"><a href="#跟进记录归档" class="headerlink" title="跟进记录归档"></a>跟进记录归档</h1><p>2024-08-27 19:39:16 原因是有几个图像模型需要上线。经过调研有三种方式：</p><ol><li>交付冯亮，以离线任务封装。优势是可以尝试利用spark集群的CPU资源，劣势是仅有的GPU来自AIT，不确定归还时间。所以作为长期跑大量数据无固定交付时间的的候选方案</li><li>在方阳aistudio（2.0）平台上自建空间。需要有组内独占的GPU资源，因为xyz的GPU卡都由彭一平管理，所以不可行</li><li>交付一平手动部署，隐藏与aistudio交互的细节。然后自建调度任务</li></ol><p>不管哪种方案，都需要了解模型的推理部署框架，以便与部署层沟通。</p><p>2024-08-27 19:53:09 看起来vllm和lmdeploy都不太支持语音模型和传统的图像模型，比如whisper</p><p>2024-08-27 19:57:06 AI模型部署落地综述（ONNX&#x2F;NCNN&#x2F;TensorRT） <a href="https://www.jianshu.com/p/4e74a7c1a6f1">https://www.jianshu.com/p/4e74a7c1a6f1</a></p><p>2024-08-27 20:18:05 TODO 一篇就够：高性能推理引擎理论与实践 (TensorRT) <a href="https://developer.aliyun.com/article/995926">https://developer.aliyun.com/article/995926</a></p>]]></content>
-      
-      
-      <categories>
-          
-          <category> 技术与工具 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> 大模型 </tag>
             
         </tags>
       
@@ -489,7 +566,7 @@
       <link href="/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E%E5%A4%96%E5%AD%98/aws3/"/>
       <url>/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E%E5%A4%96%E5%AD%98/aws3/</url>
       
-        <content type="html"><![CDATA[<h1 id="安装awscli"><a href="#安装awscli" class="headerlink" title="安装awscli"></a>安装awscli</h1><p>您可以使用 pip（一种适用于 Python 的程序包管理器）在大多数 Linux 发行版上安装 AWS Command Line Interface 及其依赖项。</p><blockquote><p>pip install awscli –upgrade</p></blockquote><p>Linux &amp; macOS详见：<a href="https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/awscli-install-linux.html">https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/awscli-install-linux.html</a></p><p>Windows 详见：<a href="https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/awscli-install-windows.html">https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/awscli-install-windows.html</a></p><h1 id="工具使用"><a href="#工具使用" class="headerlink" title="工具使用"></a>工具使用</h1><p>AWS CLI 提供两个层级的命令来访问 Amazon S3。</p><p>第一个层级名为 s3，由高级别命令构成，这些命令用于频繁使用的操作，如创建、操作和删除对象及存储桶。</p><p>第二个层级名为 s3api，用于公开所有 Amazon S3 操作，包括修改存储桶访问控制列表 (ACL)、使用跨源的资源共享 (CORS) 或日志记录策略。它允许您执行单凭高级别命令无法完成的高级操作。</p><p>要获得每个层级中提供的所有命令的列表，请在 aws s3 或 aws s3api 命令中使用 help 参数：</p><blockquote><p>aws s3 help</p></blockquote><p>或者</p><blockquote><p>aws s3api help</p></blockquote><h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>首先进行配置</p><blockquote><p>aws configure</p></blockquote><p>输入如下</p><pre><code>AWS Access Key ID [None]: xxxAWS Secret Access Key [None]: yyyDefault region name [None]: cn-north-1Default output format [None]: json</code></pre><p><strong>在贝壳，生产环境和测试环境都需要使用生产的ak&amp; sk</strong></p><h1 id="示例代码"><a href="#示例代码" class="headerlink" title="示例代码"></a>示例代码</h1><p>endpoint选项</p><blockquote><p>生产环境：<a href="http://storage.lianjia.com/">http://storage.lianjia.com</a><br>测试环境：<a href="http://test-storage.lianjia.com/">http://test-storage.lianjia.com</a></p></blockquote><p>上传单个文件</p><blockquote><p>aws s3 cp –endpoint-url&#x3D;<a href="http://test-storage.lianjia.com/">http://test-storage.lianjia.com</a> &#x2F;Users&#x2F;niuqiang&#x2F;Documents&#x2F;demo.docx s3:&#x2F;&#x2F;multimodal-interact-media&#x2F;demo.docx<br>或者<br>aws s3api –endpoint-url&#x3D;<endpoint> put-object –bucket&#x3D;test –key&#x3D;test.jpeg –body&#x3D;.&#x2F;test.jpeg</p></blockquote><p>上传目录</p><blockquote><p>aws s3 sync –endpoint-url&#x3D;<endpoint> . s3:&#x2F;&#x2F;test&#x2F;test-folder</p></blockquote><p>查看文件列表</p><blockquote><p>aws s3 ls –endpoint-url&#x3D;<a href="http://test-storage.lianjia.com/">http://test-storage.lianjia.com</a> s3:&#x2F;&#x2F;multimodal-interact-media&#x2F;</p></blockquote><p>下载目录</p><blockquote><p> aws s3 sync –endpoint-url&#x3D;<a href="http://storage.lianjia.com/">http://storage.lianjia.com</a> s3:&#x2F;&#x2F;multimodal-interact-media&#x2F; .&#x2F;</p></blockquote><p>删除文件</p><blockquote><p>aws s3 rm –endpoint-url&#x3D;<a href="http://test-storage.lianjia.com/">http://test-storage.lianjia.com</a> s3:&#x2F;&#x2F;multimodal-interact-media&#x2F;demo.docx</p></blockquote><p>预签名</p><blockquote><p>aws s3 presign –endpoint-url&#x3D;<a href="http://test-storage.lianjia.com/">http://test-storage.lianjia.com</a> s3:&#x2F;&#x2F;multimodal-interact-media&#x2F;E1Ydb0j5Jkg8f3838ab3c7b5bb714c2bcb3a4eb74aeb.docx</p></blockquote>]]></content>
+        <content type="html"><![CDATA[<h1 id="awscli"><a href="#awscli" class="headerlink" title="awscli"></a>awscli</h1><h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>您可以使用 pip（一种适用于 Python 的程序包管理器）在大多数 Linux 发行版上安装 AWS Command Line Interface 及其依赖项。</p><blockquote><p>pip install awscli –upgrade</p></blockquote><p>Linux &amp; macOS详见：<a href="https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/awscli-install-linux.html">https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/awscli-install-linux.html</a></p><p>Windows 详见：<a href="https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/awscli-install-windows.html">https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/awscli-install-windows.html</a></p><h2 id="工具使用"><a href="#工具使用" class="headerlink" title="工具使用"></a>工具使用</h2><p>AWS CLI 提供两个层级的命令来访问 Amazon S3。</p><p>第一个层级名为 s3，由高级别命令构成，这些命令用于频繁使用的操作，如创建、操作和删除对象及存储桶。</p><p>第二个层级名为 s3api，用于公开所有 Amazon S3 操作，包括修改存储桶访问控制列表 (ACL)、使用跨源的资源共享 (CORS) 或日志记录策略。它允许您执行单凭高级别命令无法完成的高级操作。</p><p>要获得每个层级中提供的所有命令的列表，请在 aws s3 或 aws s3api 命令中使用 help 参数：</p><blockquote><p>aws s3 help</p></blockquote><p>或者</p><blockquote><p>aws s3api help</p></blockquote><h2 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h2><p>首先进行配置</p><blockquote><p>aws configure</p></blockquote><p>输入如下</p><pre><code>AWS Access Key ID [None]: xxxAWS Secret Access Key [None]: yyyDefault region name [None]: cn-north-1Default output format [None]: json</code></pre><p><strong>在贝壳，生产环境和测试环境都需要使用生产的ak&amp; sk</strong></p><h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>endpoint选项</p><blockquote><p>生产环境：<a href="http://storage.lianjia.com/">http://storage.lianjia.com</a><br>测试环境：<a href="http://test-storage.lianjia.com/">http://test-storage.lianjia.com</a></p></blockquote><p>上传单个文件</p><blockquote><p>aws s3 cp –endpoint-url&#x3D;<a href="http://test-storage.lianjia.com/">http://test-storage.lianjia.com</a> &#x2F;Users&#x2F;niuqiang&#x2F;Documents&#x2F;demo.docx s3:&#x2F;&#x2F;multimodal-interact-media&#x2F;demo.docx<br>或者<br>aws s3api –endpoint-url&#x3D;<endpoint> put-object –bucket&#x3D;test –key&#x3D;test.jpeg –body&#x3D;.&#x2F;test.jpeg</p></blockquote><p>上传目录</p><blockquote><p>aws s3 sync –endpoint-url&#x3D;<endpoint> . s3:&#x2F;&#x2F;test&#x2F;test-folder</p></blockquote><p>查看文件列表</p><blockquote><p>aws s3 ls –endpoint-url&#x3D;<a href="http://test-storage.lianjia.com/">http://test-storage.lianjia.com</a> s3:&#x2F;&#x2F;multimodal-interact-media&#x2F;</p></blockquote><p>下载目录</p><blockquote><p> aws s3 sync –endpoint-url&#x3D;<a href="http://storage.lianjia.com/">http://storage.lianjia.com</a> s3:&#x2F;&#x2F;multimodal-interact-media&#x2F; .&#x2F;</p></blockquote><p>删除文件</p><blockquote><p>aws s3 rm –endpoint-url&#x3D;<a href="http://test-storage.lianjia.com/">http://test-storage.lianjia.com</a> s3:&#x2F;&#x2F;multimodal-interact-media&#x2F;demo.docx</p></blockquote><p>预签名</p><blockquote><p>aws s3 presign –endpoint-url&#x3D;<a href="http://test-storage.lianjia.com/">http://test-storage.lianjia.com</a> s3:&#x2F;&#x2F;multimodal-interact-media&#x2F;E1Ydb0j5Jkg8f3838ab3c7b5bb714c2bcb3a4eb74aeb.docx</p></blockquote><h1 id="某壳实战"><a href="#某壳实战" class="headerlink" title="某壳实战"></a>某壳实战</h1><p>某次收到一个求助，通过aws s3 ls命令获取到的文件列表，最大只能获取到1000行，那么如何才能遍历一个bucket内的所有key</p><p>在网上经过一通调研，发现最终都指向list_objects_v2这个api  </p><ol><li><a href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/list_objects_v2.html">aws的boto3.ListObjectsV2文档</a></li><li><a href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/paginator/ListObjectsV2.html">aws的boto3.Paginator.ListObjectsV2文档</a>  </li><li><a href="https://help.aliyun.com/zh/oss/developer-reference/listobjectsv2">阿里云对象存储的listobjectsv2文档</a></li></ol><p>但是某壳的s3并不支持’ContinuationToken’和’NextContinuationToken’字段，这两个字段一直都是空字符串，而是通过’StartAfter’字段支持分页。秀！</p><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">if</span> <span class="string">&#x27;StartAfter&#x27;</span> <span class="keyword">in</span> response:  <span class="comment"># 通过StartAfter来分页，遍历所有的objects</span></span><br><span class="line">    start_after = response[<span class="string">&#x27;StartAfter&#x27;</span>]</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> <span class="built_in">len</span>(response[<span class="string">&#x27;Contents&#x27;</span>]) &lt; maxkey <span class="keyword">or</span> <span class="built_in">len</span>(start_after) == <span class="number">0</span>:  <span class="comment"># 终止条件</span></span><br><span class="line">    has_more_objects = <span class="literal">False</span></span><br></pre></td></tr></table></figure>]]></content>
       
       
       <categories>
