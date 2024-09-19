@@ -194,7 +194,7 @@
 <p>git reflog 查看命令历史，与历次修改时受影响的commit id.</p>
 <p>git checkout – readme.txt 让这个文件回到最近一次git commit或git add时的状态<br>git reset HEAD readme 把暂存区的修改撤销掉<br>2018年1月30日08:37:35</p>
 <p>git rm test.txt 提交删除到暂存区<br>恢复分两种情况: commit了，这时要reset这个文件的HEAD为head~1，然后checkout<br>没有commit，直接reset这个文件的HEAD为HEAD，然后checkout<br>使用GitHub作为远程仓库</p>
-<p>第1步：创建SSH Key。在用户主目录下，看看有没有.ssh目录，如果有，再看看这个目录下有没有id_rsa和id_rsa.pub这两个文件，如果已经有了，可直接跳到下一步。如果没有，打开Shell（Windows下打开Git Bash），创建SSH Key：<br>ssh-keygen -t rsa -C “<a href="mailto:&#x79;&#x6f;&#x75;&#x72;&#x65;&#x6d;&#97;&#x69;&#x6c;&#x40;&#x65;&#x78;&#x61;&#x6d;&#x70;&#x6c;&#101;&#x2e;&#x63;&#x6f;&#109;">&#x79;&#x6f;&#x75;&#x72;&#x65;&#x6d;&#97;&#x69;&#x6c;&#x40;&#x65;&#x78;&#x61;&#x6d;&#x70;&#x6c;&#101;&#x2e;&#x63;&#x6f;&#109;</a>“</p>
+<p>第1步：创建SSH Key。在用户主目录下，看看有没有.ssh目录，如果有，再看看这个目录下有没有id_rsa和id_rsa.pub这两个文件，如果已经有了，可直接跳到下一步。如果没有，打开Shell（Windows下打开Git Bash），创建SSH Key：<br>ssh-keygen -t rsa -C “<a href="mailto:&#x79;&#111;&#x75;&#x72;&#x65;&#109;&#x61;&#105;&#x6c;&#x40;&#x65;&#x78;&#x61;&#x6d;&#x70;&#x6c;&#x65;&#46;&#99;&#111;&#x6d;">&#x79;&#111;&#x75;&#x72;&#x65;&#109;&#x61;&#105;&#x6c;&#x40;&#x65;&#x78;&#x61;&#x6d;&#x70;&#x6c;&#x65;&#46;&#99;&#111;&#x6d;</a>“</p>
 <p>第2步：登陆GitHub，打开“Account settings”，“SSH Keys”页面：然后，点“Add SSH Key”，填上任意Title，在Key文本框里粘贴id_rsa.pub文件的内容<br>第3步：登陆GitHub，然后，在右上角找到“Create a new repo”按钮，创建一个新的仓库<br>第4步：把本地仓库与之关联 TODO 如何取消关联<br>git remote add origin <a target="_blank" rel="noopener" href="https://github.com/ishitbugs/CmakeEx.git">https://github.com/ishitbugs/CmakeEx.git</a></p>
 <p>第5步：把本地库的所有内容推送到远程库上<br>git push -u origin master</p>
 <p>第6步：使用。只要本地作了提交，就可以把本地master分支的最新修改推送至GitHub<br>git push origin master</p>
@@ -236,11 +236,11 @@
 <p>第五步，禁用shell登录(如果未进行第二步，则省略)<br>出于安全考虑，第二步创建的git用户不允许登录shell，这可以通过编辑&#x2F;etc&#x2F;passwd文件完成。找到该用户所在行，改为：<br>git:x:1001:1001:,,,:&#x2F;home&#x2F;git:&#x2F;usr&#x2F;bin&#x2F;git-shell</p>
 <p>第六步，克隆远程仓库</p>
 <p>现在，可以通过git clone命令克隆远程仓库了，在各自的电脑上运行：</p>
-<p>git clone ssh:&#x2F;&#x2F;<a href="mailto:&#x6e;&#x69;&#x75;&#x71;&#105;&#x61;&#x6e;&#x67;&#x40;&#x31;&#57;&#x32;&#46;&#x31;&#x36;&#x38;&#46;&#49;&#48;&#x2e;&#x32;&#x30;&#x39;">&#x6e;&#x69;&#x75;&#x71;&#105;&#x61;&#x6e;&#x67;&#x40;&#x31;&#57;&#x32;&#46;&#x31;&#x36;&#x38;&#46;&#49;&#48;&#x2e;&#x32;&#x30;&#x39;</a>:20022&#x2F;home&#x2F;niuqiang&#x2F;sample.git</p>
+<p>git clone ssh:&#x2F;&#x2F;<a href="mailto:&#110;&#105;&#117;&#x71;&#105;&#x61;&#x6e;&#103;&#x40;&#x31;&#57;&#x32;&#x2e;&#x31;&#x36;&#56;&#x2e;&#x31;&#48;&#46;&#50;&#48;&#57;">&#110;&#105;&#117;&#x71;&#105;&#x61;&#x6e;&#103;&#x40;&#x31;&#57;&#x32;&#x2e;&#x31;&#x36;&#56;&#x2e;&#x31;&#48;&#46;&#50;&#48;&#57;</a>:20022&#x2F;home&#x2F;niuqiang&#x2F;sample.git</p>
 <p>或者</p>
 <p>git clone ssh:&#x2F;&#x2F;192.168.10.209:20022&#x2F;home&#x2F;niuqiang&#x2F;sample.git</p>
 <p>或者</p>
-<p>git clone ssh:&#x2F;&#x2F;<a href="mailto:&#110;&#x69;&#x75;&#113;&#x69;&#x61;&#110;&#103;&#64;&#49;&#57;&#x32;&#46;&#x31;&#x36;&#56;&#46;&#49;&#48;&#x2e;&#50;&#x30;&#57;">&#110;&#x69;&#x75;&#113;&#x69;&#x61;&#110;&#103;&#64;&#49;&#57;&#x32;&#46;&#x31;&#x36;&#56;&#46;&#49;&#48;&#x2e;&#50;&#x30;&#57;</a>&#x2F;home&#x2F;niuqiang&#x2F;sample.git</p>
+<p>git clone ssh:&#x2F;&#x2F;<a href="mailto:&#x6e;&#105;&#117;&#x71;&#x69;&#x61;&#x6e;&#x67;&#64;&#x31;&#57;&#50;&#x2e;&#x31;&#x36;&#x38;&#46;&#49;&#x30;&#46;&#x32;&#x30;&#57;">&#x6e;&#105;&#117;&#x71;&#x69;&#x61;&#x6e;&#x67;&#64;&#x31;&#57;&#50;&#x2e;&#x31;&#x36;&#x38;&#46;&#49;&#x30;&#46;&#x32;&#x30;&#57;</a>&#x2F;home&#x2F;niuqiang&#x2F;sample.git</p>
 <p>或者</p>
 <p>git clone ssh:&#x2F;&#x2F;192.168.10.209&#x2F;home&#x2F;niuqiang&#x2F;sample.git ☆</p>
 <p>为了支持端口不在22的ssh协议登陆，可能还需要在.ssh&#x2F;cofig中指定端口</p>
@@ -403,7 +403,7 @@
 </ol>
 <p>下载  </p>
 <ol>
-<li>如果你正在克隆包含大量 LFS 文件的仓库，显式使用 git lfs clone 命令可提供更好的性能：git lfs clone <a href="mailto:&#x67;&#x69;&#x74;&#x40;&#98;&#105;&#116;&#x62;&#x75;&#99;&#107;&#101;&#x74;&#x2e;&#111;&#114;&#103;">&#x67;&#x69;&#x74;&#x40;&#98;&#105;&#116;&#x62;&#x75;&#99;&#107;&#101;&#x74;&#x2e;&#111;&#114;&#103;</a>:tpettersen&#x2F;Atlasteroids.git</li>
+<li>如果你正在克隆包含大量 LFS 文件的仓库，显式使用 git lfs clone 命令可提供更好的性能：git lfs clone <a href="mailto:&#x67;&#x69;&#116;&#64;&#x62;&#x69;&#x74;&#x62;&#x75;&#99;&#107;&#x65;&#116;&#x2e;&#x6f;&#114;&#103;">&#x67;&#x69;&#116;&#64;&#x62;&#x69;&#x74;&#x62;&#x75;&#99;&#107;&#x65;&#116;&#x2e;&#x6f;&#114;&#103;</a>:tpettersen&#x2F;Atlasteroids.git</li>
 <li>或者普通git clone后 git lfs pull</li>
 </ol>
 <h2 id="git-submodule"><a href="#git-submodule" class="headerlink" title="git submodule"></a>git submodule</h2><ol>
