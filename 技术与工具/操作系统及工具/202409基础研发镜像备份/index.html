@@ -1,0 +1,186 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>研发基础镜像构建脚本 | 牛强的个人小站</title><meta name="author" content="niuqiang"><meta name="copyright" content="niuqiang"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="研发过程中总结的可以用来快速构建研发镜像的脚本">
+<meta property="og:type" content="article">
+<meta property="og:title" content="研发基础镜像构建脚本">
+<meta property="og:url" content="https://itsniuqiang.github.io/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%8F%8A%E5%B7%A5%E5%85%B7/202409%E5%9F%BA%E7%A1%80%E7%A0%94%E5%8F%91%E9%95%9C%E5%83%8F%E5%A4%87%E4%BB%BD/index.html">
+<meta property="og:site_name" content="牛强的个人小站">
+<meta property="og:description" content="研发过程中总结的可以用来快速构建研发镜像的脚本">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://itsniuqiang.github.io/covers/202409_dev_java_on_docker.png">
+<meta property="article:published_time" content="2024-09-30T09:45:48.000Z">
+<meta property="article:modified_time" content="2024-09-30T09:46:45.930Z">
+<meta property="article:author" content="niuqiang">
+<meta property="article:tag" content="操作系统">
+<meta property="article:tag" content="Docker">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://itsniuqiang.github.io/covers/202409_dev_java_on_docker.png"><link rel="shortcut icon" href="/covers/avatar_common.JPG"><link rel="canonical" href="https://itsniuqiang.github.io/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%8F%8A%E5%B7%A5%E5%85%B7/202409%E5%9F%BA%E7%A1%80%E7%A0%94%E5%8F%91%E9%95%9C%E5%83%8F%E5%A4%87%E4%BB%BD/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":300},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":50,"languages":{"author":"作者: niuqiang","link":"链接: ","source":"来源: 牛强的个人小站","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '研发基础镜像构建脚本',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2024-09-30 17:46:45'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+  window.addEventListener('load',() => { preloader.endLoading() })
+
+  if (false) {
+    document.addEventListener('pjax:send', () => { preloader.initLoading() })
+    document.addEventListener('pjax:complete', () => { preloader.endLoading() })
+  }
+})()</script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/covers/avatar_common.JPG" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">48</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">52</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/catalogue"><i class="fa-fw fa fa-book"></i><span> 目录</span></a></div><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/whisper/"><i class="fa-fw fa fa-paper-plane"></i><span> 小声说</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fa fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fa fa-user-circle"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/covers/202409_dev_java_on_docker.png')"><nav id="nav"><span id="blog-info"><a href="/" title="牛强的个人小站"><span class="site-name">牛强的个人小站</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/catalogue"><i class="fa-fw fa fa-book"></i><span> 目录</span></a></div><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/whisper/"><i class="fa-fw fa fa-paper-plane"></i><span> 小声说</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fa fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fa fa-user-circle"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">研发基础镜像构建脚本</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="fa-fw post-meta-icon far fa-calendar-alt"></i><span class="post-meta-label">发表于</span><time datetime="2024-09-30T09:45:48.000Z" title="发表于 2024-09-30 17:45:48">2024-09-30</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/">技术与工具</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">553</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>3分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="研发基础镜像构建脚本"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>Ubuntu C++研发版</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 基础镜像</span></span><br><span class="line"><span class="keyword">FROM</span> ubuntu:<span class="number">18.04</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置环境变量</span></span><br><span class="line"><span class="keyword">ENV</span> PYTHONIOENCODING utf-<span class="number">8</span></span><br><span class="line"><span class="keyword">ENV</span> TERM=xterm-<span class="number">256</span>color</span><br><span class="line"><span class="keyword">ENV</span> LANG=C.UTF-<span class="number">8</span></span><br><span class="line"><span class="keyword">ENV</span> DEBIAN_FRONTEND noninteractive</span><br><span class="line"></span><br><span class="line"><span class="comment"># 更新依赖源</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> sed -i s/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g /etc/apt/sources.list &amp;&amp;</span></span><br><span class="line">        sed -i s/security.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g /etc/apt/sources.list &amp;&amp;</span><br><span class="line">        rm -rf /var/lib/apt/lists/* &amp;&amp;</span><br><span class="line">        apt list --upgradable</span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装系统依赖</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get update &amp;&amp;</span></span><br><span class="line">        apt-get install -y apt-utils supervisor cron rsync git g++ make cmake build-essential automake autoconf libtool pkg-config libssl-dev zlib1g-dev libbz2-dev gfortran texinfo</span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install git-lfs -y &amp;&amp; git lfs install</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装环境依赖</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install -y <span class="built_in">sudo</span> curl net-tools clang-format tree gdb cgdb vim wget valgrind screen ctags cppcheck</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装C++依赖</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get update &amp;&amp; apt-get install -y libboost-all-dev uuid-dev libjsoncpp-dev libgflags-dev libunwind-dev libgoogle-glog-dev libgtest-dev libgoogle-perftools-dev</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装语音依赖</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get update &amp;&amp; apt-get install -y libass-dev libfreetype6-dev libsdl2-dev libtheora-dev libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev</span></span><br><span class="line">    apt install -y libavformat-dev libavcodec-dev libswresample-dev libswscale-dev libavutil-dev libsdl1.<span class="number">2</span>-dev libmp3lame-dev</span><br></pre></td></tr></table></figure>
+
+<p>Centos7 C++研发版</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line"><span class="keyword">FROM</span> centos:centos7.<span class="number">8.2003</span></span><br><span class="line"><span class="keyword">MAINTAINER</span> niuqiang niuqiang@didiglobal.com</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /home/niuqiang</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装基本工具</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> yum -y install epel-release</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> yum -y update</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> yum -y install initscripts git rsync openssh-server openssh-clients net-tools wget</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> yum -y install automake autoconf libtool make cmake</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> yum -y groupinstall -y <span class="string">&quot;Development Tools&quot;</span></span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> yum -y install gcc gcc-c++ gcc-go python3 gdb gdb-gdbserver cgdb</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> yum -y update gdb</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> yum -y install zlib-devel openssl-devel</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> yum -y install redis mysql</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> git <span class="built_in">clone</span> --depth 1 https://github.com/junegunn/fzf.git ~/.fzf &amp;&amp; ~/.fzf/install</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装golang</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> rpm --import https://mirror.go-repo.io/centos/RPM-GPG-KEY-GO-REPO</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> curl -s https://mirror.go-repo.io/centos/go-repo.repo | <span class="built_in">tee</span> /etc/yum.repos.d/go-repo.repo</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> yum -y install golang</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装vim8.0</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> yum remove vim-* -y &amp;&amp; wget -P /etc/yum.repos.d/  https://copr.fedorainfracloud.org/coprs/lbiaggi/vim80-ligatures/repo/epel-7/lbiaggi-vim80-ligatures-epel-7.repo &amp;&amp; yum  install vim-enhanced <span class="built_in">sudo</span> -y</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动sshserver</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">mkdir</span> /var/run/sshd</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">echo</span> <span class="string">&#x27;root:d486d275&#x27;</span> | chpasswd</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> sed -i <span class="string">&#x27;s/PermitRootLogin prohibit-password/PermitRootLogin yes/&#x27;</span> /etc/ssh/sshd_config</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> useradd -m clion &amp;&amp; <span class="built_in">yes</span> d486d275 | passwd clion</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">22</span> <span class="number">7777</span> <span class="number">8096</span> <span class="number">8098</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key</span></span><br><span class="line"><span class="keyword">CMD</span><span class="language-bash"> /usr/sbin/sshd -D</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 1. build</span></span><br><span class="line"><span class="comment"># docker build . -f Dockerfile -t niuqiang_test_centos7</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. run</span></span><br><span class="line"><span class="comment"># docker run -itd --cap-add sys_ptrace -p 8022:22 -p 8096:8096 --name niuqiang_test_wenet continuumio/anaconda3</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. login</span></span><br><span class="line"><span class="comment"># ssh root@localhost -p 8022 # test</span></span><br><span class="line"><span class="comment"># docker exec -it mycentos-0.2 /bin/bash</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. start sshd</span></span><br><span class="line"><span class="comment"># /usr/sbin/sshd -D</span></span><br><span class="line"></span><br></pre></td></tr></table></figure></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://itsniuqiang.github.io">niuqiang</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://itsniuqiang.github.io/%E6%8A%80%E6%9C%AF%E4%B8%8E%E5%B7%A5%E5%85%B7/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%8F%8A%E5%B7%A5%E5%85%B7/202409%E5%9F%BA%E7%A1%80%E7%A0%94%E5%8F%91%E9%95%9C%E5%83%8F%E5%A4%87%E4%BB%BD/">https://itsniuqiang.github.io/技术与工具/操作系统及工具/202409基础研发镜像备份/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://itsniuqiang.github.io" target="_blank">牛强的个人小站</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统</a><a class="post-meta__tags" href="/tags/Docker/">Docker</a></div><div class="post_share"><div class="social-share" data-image="/covers/202409_dev_java_on_docker.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/covers/avatar_common.JPG" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">niuqiang</div><div class="author-info__description">慎思明志，笃行致远</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">48</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">52</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><a id="card-info-btn" href="/covers/wechat_qrcode.jpeg"><i class="fab fa-weixin"></i><span>Let's chat!</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="mailto:15600757505@163.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://weibo.com/u/2994571545" target="_blank" title="Weibo"><i class="fab fa-weibo"></i></a><a class="social-icon" href="https://www.douban.com/people/awesomeqiang" target="_blank" title="Douban"><i class="fas fa-check"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎光临niuqiang的个人小站，祝你今日好运！</div></div><div class="sticky_layout"></div></div></main><footer id="footer" style="background-image: url('/covers/202409_dev_java_on_docker.png')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By niuqiang</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.8.8/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/canvas-fluttering-ribbon.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/click-show-text.min.js" data-mobile="false" data-text="lucky +1" data-fontsize="15px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=4.13.0"></script></div></div></body></html>
